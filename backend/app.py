@@ -1,23 +1,32 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
 
-@app.route("/feedback", methods=["POST"])
-def feedback():
-    data = request.json
+# Enable CORS for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    notes = data.get("notes", "")
+# Request model
+class FeedbackRequest(BaseModel):
+    notes: str
 
-    if len(notes) > 20:
-        message = "Great interaction! Notes are detailed."
-    else:
-        message = "Please provide more detailed discussion notes."
+# API endpoint
+@app.post("/feedback")
+def feedback(data: FeedbackRequest):
+    notes = data.notes
 
-    return jsonify({
-        "feedback": message
-    })
+    if len(notes) >= 30:
+        return {
+            "feedback": "🤖 Excellent discussion. The interaction was detailed."
+        }
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    return {
+        "feedback": "🤖 Please add more details to improve the interaction log."
+    }
